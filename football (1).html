@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClubAtlas — Leagues, Clubs & Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch:#1B5E3A;
+    --pitch-dark:#123F27;
+    --night:#05080B;
+    --night-2:#0C131C;
+    --chalk:#EEEDE6;
+    --chalk-dim:#D9D7CB;
+    --amber:#FFB020;
+    --red:#FF3355;
+    --lime:#C6FF3D;
+    --line:rgba(238,237,230,0.14);
+    --ink:#0E1B2C;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+  }
+  body{
+    margin:0;
+    background:var(--chalk);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    line-height:1.5;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  /* ---------- FULL-PAGE BACKGROUND FX ---------- */
+  .bg-fx{
+    position:fixed;inset:0;
+    z-index:5;
+    pointer-events:none;
+    overflow:hidden;
+    mix-blend-mode:screen;
+  }
+  .bg-stripes{
+    position:absolute;
+    inset:-20% -20%;
+    background:repeating-linear-gradient(
+      115deg,
+      rgba(255,176,32,0.05) 0px, rgba(255,176,32,0.05) 2px,
+      transparent 2px, transparent 140px
+    );
+    animation:stripe-pan 22s linear infinite;
+  }
+  @keyframes stripe-pan{
+    from{transform:translate(0,0);}
+    to{transform:translate(140px,80px);}
+  }
+  .bg-particle{
+    position:absolute;
+    bottom:-40px;
+    width:5px;height:5px;
+    border-radius:50%;
+    background:var(--lime);
+    opacity:0.45;
+    box-shadow:0 0 8px rgba(198,255,61,0.6);
+    animation:particle-rise linear infinite;
+  }
+  @keyframes particle-rise{
+    0%{transform:translateY(0) translateX(0); opacity:0;}
+    10%{opacity:0.5;}
+    90%{opacity:0.3;}
+    100%{transform:translateY(-110vh) translateX(30px); opacity:0;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .bg-stripes{animation:none;}
+    .bg-particle{animation:none; display:none;}
+  }
+
+  /* keep real content above the background layer */
+  .topnav, .ticker, .hazard, .hero, .live, .leagues, .quiz, footer{
+    position:relative;
+    z-index:1;
+  }
+  h1,h2,h3, .display{
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    letter-spacing:0.01em;
+    margin:0;
+  }
+  a{color:inherit;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px;}
+
+  /* ---------- NAV ---------- */
+  .topnav{
+    position:sticky;top:0;z-index:50;
+    background:var(--night);
+    border-bottom:3px solid var(--amber);
+  }
+  .topnav .wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    height:64px;
+  }
+  .brand{
+    color:var(--chalk);
+    font-family:'Anton', sans-serif;
+    font-size:22px;
+    letter-spacing:0.02em;
+    display:flex;align-items:center;gap:10px;
+  }
+  .brand .dot{width:10px;height:10px;background:var(--amber);border-radius:50%;display:inline-block;}
+  .navlinks{display:flex;gap:0;list-style:none;margin:0;padding:0;}
+  .navlinks a{
+    display:block;
+    color:var(--chalk-dim);
+    text-decoration:none;
+    font-size:14px;font-weight:600;
+    padding:10px 16px;
+    border-radius:var(--radius);
+    transition:color .15s ease, background .15s ease;
+  }
+  .navlinks a:hover{color:var(--night);background:var(--amber);}
+  .navtoggle{
+    display:none;
+    background:none;border:1px solid var(--line);color:var(--chalk);
+    padding:8px 14px;font-size:18px;border-radius:2px;
+    min-width:44px;min-height:44px;
+    cursor:pointer;
+  }
+
+  /* ---------- TICKER ---------- */
+  .ticker{
+    background:var(--amber);
+    color:var(--night);
+    overflow:hidden;
+    white-space:nowrap;
+    position:relative;
+    box-shadow:0 0 18px rgba(255,176,32,0.45);
+  }
+  .ticker::after{
+    content:"";
+    position:absolute;left:0;bottom:0;width:100%;height:3px;
+    background:repeating-linear-gradient(-45deg, var(--night) 0 10px, var(--amber) 10px 20px);
+  }
+  .ticker-track{
+    display:inline-flex;
+    animation:ticker-scroll 20s linear infinite;
+    padding:7px 0;
+  }
+  .ticker-track span{
+    font-size:12.5px;font-weight:700;letter-spacing:0.03em;
+    padding:0 26px;
+    position:relative;
+  }
+  .ticker-track span::after{
+    content:"●";
+    position:absolute;right:0;top:1px;
+    font-size:7px;color:rgba(14,27,44,0.45);
+  }
+  @keyframes ticker-scroll{
+    from{transform:translateX(0);}
+    to{transform:translateX(-50%);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .ticker-track{animation:none;}
+  }
+
+  /* ---------- HAZARD DIVIDER ---------- */
+  .hazard{
+    height:10px;
+    background:repeating-linear-gradient(-45deg, var(--night) 0 14px, var(--amber) 14px 28px);
+  }
+
+  /* ---------- HERO / SCOREBOARD ---------- */
+  .hero{
+    background:
+      radial-gradient(circle at 15% 15%, rgba(198,255,61,0.10), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(255,51,85,0.12), transparent 45%),
+      repeating-linear-gradient(100deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 90px, transparent 90px, transparent 180px),
+      linear-gradient(180deg, var(--night) 0%, var(--night-2) 100%);
+    background-size:200% 200%, 200% 200%, auto, auto;
+    animation:hero-drift 16s ease-in-out infinite;
+    color:var(--chalk);
+    padding:56px 0 56px;
+    position:relative;
+    overflow:hidden;
+  }
+  @keyframes hero-drift{
+    0%,100%{background-position:0% 0%, 100% 100%, 0 0, 0 0;}
+    50%{background-position:20% 30%, 70% 60%, 0 0, 0 0;}
+  }
+  .hero-ball{
+    position:absolute;
+    right:6%;
+    top:14%;
+    width:64px;height:64px;
+    opacity:0.5;
+    animation:ball-float 6s ease-in-out infinite;
+    filter:drop-shadow(0 0 14px rgba(198,255,61,0.35));
+  }
+  @keyframes ball-float{
+    0%,100%{transform:translateY(0) rotate(0deg);}
+    50%{transform:translateY(-22px) rotate(180deg);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .hero{animation:none;}
+    .hero-ball{animation:none;}
+  }
+  .hero .wrap{display:grid;grid-template-columns:1.1fr 0.9fr;gap:48px;align-items:center;}
+  .hero-eyebrow{
+    color:var(--amber);
+    font-size:13px;
+    font-weight:700;
+    margin:0 0 14px;
+  }
+  .hero h1{
+    font-size:clamp(40px,5.4vw,64px);
+    line-height:0.98;
+    color:var(--chalk);
+  }
+  .hero h1 span{color:var(--amber);}
+  .glow-word{
+    text-shadow:0 0 20px rgba(255,176,32,0.6), 0 0 40px rgba(255,176,32,0.28);
+  }
+  .glitch-h1{animation:glitch-in 0.6s steps(2,end) 1;}
+  @keyframes glitch-in{
+    0%{clip-path:inset(0 0 88% 0); transform:translate(-6px,0);}
+    20%{clip-path:inset(30% 0 40% 0); transform:translate(6px,0);}
+    40%{clip-path:inset(60% 0 5% 0); transform:translate(-4px,0);}
+    60%{clip-path:inset(10% 0 70% 0); transform:translate(4px,0);}
+    80%{clip-path:inset(0 0 0 0); transform:translate(-2px,0);}
+    100%{clip-path:inset(0 0 0 0); transform:translate(0,0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .glitch-h1{animation:none;}
+  }
+  .hero p{
+    max-width:46ch;
+    color:var(--chalk-dim);
+    font-size:16.5px;
+    margin-top:18px;
+  }
+  .hero-ctas{margin-top:28px;display:flex;gap:14px;flex-wrap:wrap;}
+  .btn{
+    display:inline-block;
+    padding:13px 22px;
+    font-weight:600;
+    font-size:14.5px;
+    text-decoration:none;
+    border-radius:var(--radius);
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform .12s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn-primary{
+    background:var(--amber);color:var(--night);
+    box-shadow:0 0 0 0 rgba(255,176,32,0.5);
+    transition:transform .12s ease, box-shadow .2s ease, background .15s ease;
+  }
+  .btn-primary:hover{transform:translateY(-1px) scale(1.02); box-shadow:0 0 0 6px rgba(255,176,32,0.18);}
+  .btn-ghost{background:transparent;color:var(--chalk);border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--amber);color:var(--amber);}
+
+  /* scoreboard mock */
+  .scoreboard{
+    background:var(--pitch-dark);
+    border:1px solid rgba(238,237,230,0.16);
+    border-radius:4px;
+    padding:22px 24px 26px;
+    box-shadow:0 24px 60px -22px rgba(0,0,0,0.6);
+  }
+  .scoreboard-top{
+    display:flex;justify-content:space-between;
+    font-size:11px;letter-spacing:0.08em;
+    color:var(--chalk-dim);
+    padding-bottom:14px;margin-bottom:16px;
+    border-bottom:1px dashed rgba(238,237,230,0.2);
+  }
+  .score-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;}
+  .team{font-size:15px;font-weight:700;}
+  .team.home{text-align:right;}
+  .team .sub{display:block;font-weight:400;font-size:11.5px;color:var(--chalk-dim);margin-top:3px;}
+  .score-digits{
+    font-family:'Anton', sans-serif;
+    font-size:42px;
+    background:var(--night);
+    padding:8px 18px;
+    border-radius:3px;
+    color:var(--amber);
+    letter-spacing:0.04em;
+    display:flex;gap:8px;align-items:center;
+    border:1px solid rgba(255,176,32,0.35);
+    text-shadow:0 0 10px rgba(255,176,32,0.7);
+  }
+  .score-digits .colon{color:var(--chalk-dim);font-size:26px;}
+  .clock{
+    margin-top:16px;
+    display:flex;justify-content:center;align-items:center;gap:8px;
+    font-size:12.5px;color:var(--chalk-dim);letter-spacing:0.06em;
+  }
+  .clock .pulse{width:7px;height:7px;background:var(--red);border-radius:50%;animation:pulse 1.6s infinite ease-in-out;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+
+  /* ---------- SECTION HEADERS ---------- */
+  section{padding:72px 0;}
+  .sec-head{max-width:640px;margin-bottom:40px;}
+  .sec-kicker{color:var(--pitch);font-weight:700;font-size:13px;margin-bottom:8px;}
+  .sec-head h2{font-size:clamp(28px,3.6vw,40px);}
+  .sec-head p{color:#4B5563;margin-top:12px;font-size:15.5px;}
+
+  /* ---------- LIVE SCORES ---------- */
+  .live{background:var(--chalk);border-bottom:1px solid #DAD8CC;}
+  .live-status{
+    font-size:13.5px;color:#6B7280;margin-bottom:20px;
+    padding:10px 14px;background:#E4E2D6;border-radius:3px;display:inline-block;
+  }
+  .live-status.error{background:rgba(192,57,43,0.1);color:var(--red);}
+  .live-updated{margin-top:16px;font-size:12px;color:#9B9788;}
+  .live-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(260px,1fr));
+    gap:14px;
+  }
+  .match-card{
+    background:var(--night);color:var(--chalk);
+    border-radius:4px;padding:16px 18px;
+    border:1px solid var(--line);
+    border-top:3px solid var(--accent, var(--amber));
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .match-card:hover{transform:translateY(-2px);}
+  .match-comp{font-size:11px;color:var(--chalk-dim);letter-spacing:0.05em;margin-bottom:10px;}
+  .match-teams{display:flex;flex-direction:column;gap:8px;}
+  .match-team{display:flex;justify-content:space-between;align-items:center;font-size:14.5px;font-weight:600;}
+  .match-team .n{font-family:'Anton',sans-serif;font-size:18px;color:var(--amber);}
+  .match-status{
+    margin-top:12px;font-size:11.5px;font-weight:700;letter-spacing:0.05em;
+    color:var(--chalk-dim);
+  }
+  .match-status.live{color:var(--red); text-shadow:0 0 8px rgba(255,51,85,0.6);}
+  .match-status.live::before{content:"● "; animation:pulse 1.2s infinite ease-in-out;}
+
+  /* ---------- LEAGUES ---------- */
+  .leagues{background:var(--chalk);}
+  .league-tabs{
+    display:flex;flex-wrap:wrap;gap:8px;
+    border-bottom:2px solid #DAD8CC;
+    margin-bottom:32px;
+  }
+  .league-tab{
+    background:none;border:none;cursor:pointer;
+    padding:12px 6px;margin-right:22px;
+    font-family:'Work Sans',sans-serif;
+    font-weight:600;font-size:14.5px;color:#6B7280;
+    border-bottom:3px solid transparent;
+    transform:translateY(2px);
+    transition:color .15s ease, border-color .15s ease;
+    position:relative;
+  }
+  .league-tab .swatch{
+    display:inline-block;width:8px;height:8px;border-radius:50%;
+    margin-right:8px;background:var(--accent, #9B9788);
+    transform:translateY(-1px);
+  }
+  .league-tab:hover{color:var(--ink);}
+  .league-tab.active{color:var(--ink);border-bottom-color:var(--accent, var(--pitch));}
+
+  .league-panel{display:none;}
+  .league-panel.active{display:block;animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .league-meta{
+    display:flex;flex-wrap:wrap;gap:28px;
+    background:var(--night);
+    color:var(--chalk);
+    padding:22px 26px;
+    border-radius:4px;
+    margin-bottom:26px;
+    border-left:5px solid var(--accent, var(--amber));
+  }
+  .league-meta div{min-width:120px;}
+  .league-meta .k{font-size:11px;letter-spacing:0.06em;color:var(--chalk-dim);margin-bottom:4px;}
+  .league-meta .v{font-family:'Anton',sans-serif;font-size:20px;color:var(--accent, var(--amber));}
+  .league-note{
+    font-size:13.5px;color:#6B7280;margin:0 0 20px;
+    border-left:3px solid var(--amber);padding-left:12px;
+  }
+
+  .club-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px,1fr));
+    gap:2px;
+    background:#DAD8CC;
+    border:1px solid #DAD8CC;
+  }
+  .club-card{
+    background:var(--chalk);
+    padding:18px 18px 16px;
+    display:flex;align-items:center;gap:14px;
+    border-left:3px solid transparent;
+    transition:border-color .15s ease, background .15s ease, transform .15s ease, box-shadow .2s ease;
+  }
+  .club-card:hover{
+    background:#F7F6F0;
+    border-left-color:var(--accent, var(--pitch));
+    transform:translateX(3px);
+    box-shadow:inset 0 0 0 1px var(--accent, var(--pitch)), 0 6px 18px -10px var(--accent, var(--pitch));
+  }
+  .club-crest{
+    flex:none;
+    width:44px;height:50px;
+    transition:transform .25s ease, filter .25s ease;
+  }
+  .club-card:hover .club-crest{
+    transform:scale(1.12) rotate(-4deg);
+    filter:drop-shadow(0 0 8px var(--accent, var(--pitch)));
+  }
+  .club-crest svg{width:100%;height:100%;display:block;}
+  .club-card-body{min-width:0;}
+  .club-card .name{font-weight:700;font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .club-card .city{font-size:12px;color:#6B7280;}
+
+  /* ---------- QUIZ ---------- */
+  .quiz{background:var(--night);color:var(--chalk);}
+  .quiz .sec-head p{color:var(--chalk-dim);}
+  .quiz .sec-kicker{color:var(--amber);}
+  .quiz-box{
+    background:var(--night-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:32px;
+    max-width:720px;
+  }
+  .quiz-progress{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:12.5px;color:var(--chalk-dim);margin-bottom:18px;
+  }
+  .quiz-bar{height:4px;background:rgba(238,237,230,0.14);border-radius:4px;overflow:hidden;margin-bottom:26px;}
+  .quiz-bar-fill{height:100%;background:var(--amber);width:0%;transition:width .3s ease;}
+  .quiz-question{font-size:19px;font-weight:700;margin-bottom:20px;min-height:52px;}
+  .quiz-options{display:grid;gap:10px;}
+  .quiz-opt{
+    text-align:left;
+    background:var(--night);
+    border:1px solid var(--line);
+    color:var(--chalk);
+    padding:13px 16px;
+    font-size:14.5px;font-family:'Work Sans',sans-serif;font-weight:500;
+    border-radius:3px;cursor:pointer;
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .quiz-opt:hover{border-color:var(--amber);transform:translateX(3px);}
+  .quiz-opt.correct{
+    background:rgba(198,255,61,0.16);border-color:var(--lime);
+    box-shadow:0 0 16px rgba(198,255,61,0.35);
+    animation:correct-pulse .5s ease;
+  }
+  .quiz-opt.wrong{
+    background:rgba(255,51,85,0.18);border-color:var(--red);
+    animation:wrong-shake .4s ease;
+  }
+  @keyframes correct-pulse{
+    0%{transform:scale(1);}
+    40%{transform:scale(1.03);}
+    100%{transform:scale(1);}
+  }
+  @keyframes wrong-shake{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-5px);}
+    75%{transform:translateX(5px);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .quiz-opt.correct, .quiz-opt.wrong{animation:none;}
+  }
+  .quiz-opt[disabled]{cursor:default;}
+  .quiz-footer{display:flex;justify-content:space-between;align-items:center;margin-top:24px;}
+  .quiz-score{font-family:'Anton',sans-serif;font-size:15px;color:var(--amber);letter-spacing:0.03em;}
+  .quiz-result{display:none;text-align:center;}
+  .quiz-result .big{font-family:'Anton',sans-serif;font-size:48px;color:var(--amber);}
+  .quiz-result p{color:var(--chalk-dim);margin:10px 0 22px;}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:var(--pitch-dark);color:var(--chalk-dim);padding:34px 0;font-size:13px;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:center;}
+
+  @media (max-width:1024px){
+    .hero .wrap{grid-template-columns:1fr;gap:36px;}
+    .scoreboard{max-width:480px;}
+    .live-grid{grid-template-columns:repeat(auto-fill, minmax(220px,1fr));}
+  }
+
+  @media (max-width:820px){
+    .navlinks{
+      display:none;
+      position:absolute;
+      top:64px;left:0;right:0;
+      flex-direction:column;
+      background:var(--night);
+      border-bottom:3px solid var(--amber);
+      padding:8px 0;
+      gap:0;
+    }
+    .navlinks.open{display:flex;}
+    .navlinks a{padding:14px 28px;font-size:15px;}
+    .navtoggle{display:block;}
+    .topnav .wrap{position:relative;}
+
+    section{padding:52px 0;}
+    .hero{padding:44px 0 44px;}
+    .hero-ball{width:44px;height:44px;top:8%;right:4%;}
+    .hero-ctas{flex-direction:column;align-items:stretch;}
+    .hero-ctas .btn{text-align:center;}
+
+    .league-tabs{gap:6px;}
+    .league-tab{margin-right:16px;font-size:13.5px;}
+    .club-grid{grid-template-columns:repeat(auto-fill, minmax(180px,1fr));}
+    .quiz-box{padding:24px 20px;}
+    .quiz-question{font-size:17px;}
+    footer .wrap{flex-direction:column;align-items:flex-start;text-align:left;}
+  }
+
+  @media (max-width:600px){
+    .wrap{padding:0 18px;}
+    .hero h1{font-size:clamp(32px,9vw,44px);}
+    .hero p{font-size:15px;}
+    .scoreboard{padding:18px 16px 20px;}
+    .score-digits{font-size:32px;padding:6px 12px;}
+    .score-row{gap:8px;}
+    .team{font-size:13px;}
+    .club-grid{grid-template-columns:repeat(auto-fill, minmax(150px,1fr));}
+    .club-card{padding:14px 14px 12px;gap:10px;}
+    .club-crest{width:36px;height:41px;}
+    .live-grid{grid-template-columns:1fr;}
+    .league-meta{gap:18px;padding:18px 20px;}
+    .quiz-opt{padding:14px 14px;font-size:14px;}
+    .sec-head h2{font-size:clamp(24px,7vw,32px);}
+  }
+
+  @media (max-width:380px){
+    .brand{font-size:18px;}
+    .club-grid{grid-template-columns:1fr 1fr;}
+    .hero-ball{display:none;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  /* ============================================================
+     CLUB PROFILE MODAL — new feature only.
+     Every color/spacing value below reuses the existing design
+     tokens (--night, --chalk, --amber, var(--radius), etc.) so
+     nothing here introduces a new palette or type scale.
+     ============================================================ */
+
+  /* Cards are now interactive; this is the only change to an
+     existing selector, and it's purely a UX affordance. */
+  .club-card{cursor:pointer;}
+
+  .atlas-modal-overlay{
+    position:fixed;inset:0;z-index:200;
+    background:rgba(5,8,11,0.72);
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:5vh 20px;
+    overflow-y:auto;
+  }
+  .atlas-modal-overlay[hidden]{display:none;}
+  .atlas-modal{
+    position:relative;
+    background:var(--night);
+    color:var(--chalk);
+    border:1px solid var(--line);
+    border-radius:4px;
+    max-width:640px;width:100%;
+    padding:28px 26px 30px;
+    box-shadow:0 30px 70px -20px rgba(0,0,0,0.7);
+  }
+  .atlas-modal-close{
+    position:absolute;top:14px;right:14px;
+    width:32px;height:32px;
+    background:transparent;border:1px solid var(--line);color:var(--chalk);
+    border-radius:3px;cursor:pointer;font-size:14px;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .atlas-modal-close:hover{border-color:var(--amber);color:var(--amber);}
+  .atlas-modal-header{display:flex;align-items:center;gap:16px;margin-bottom:22px;padding-right:36px;}
+  .atlas-modal-crest{width:52px;height:60px;flex:none;}
+  .atlas-modal-crest svg{width:100%;height:100%;display:block;}
+  .atlas-modal-header h3{font-family:'Anton',sans-serif;font-size:24px;color:var(--chalk);}
+  .atlas-modal-sub{font-size:12.5px;color:var(--chalk-dim);margin:4px 0 0;}
+
+  .fixture-list{display:flex;flex-direction:column;gap:10px;}
+  .fixture-card{
+    background:var(--night-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:14px 16px;
+  }
+  .fixture-comp{
+    display:flex;align-items:center;gap:8px;
+    font-size:11.5px;color:var(--chalk-dim);letter-spacing:0.03em;
+    margin-bottom:10px;
+  }
+  .fixture-comp img{width:16px;height:16px;object-fit:contain;}
+  .fixture-teams{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .fixture-team{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;min-width:0;}
+  .fixture-team img{width:22px;height:22px;object-fit:contain;flex:none;}
+  .fixture-team span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .fixture-vs{color:var(--chalk-dim);font-size:12px;flex:none;padding:0 4px;}
+  .fixture-meta{
+    display:flex;flex-wrap:wrap;gap:6px 16px;
+    margin-top:12px;padding-top:12px;
+    border-top:1px dashed rgba(238,237,230,0.16);
+    font-size:12px;color:var(--chalk-dim);
+  }
+  .fixture-status{font-weight:700;color:var(--amber);}
+  .fixture-status.live{color:var(--red);}
+  .fixture-status.finished{color:var(--chalk-dim);}
+  .fixture-loading, .fixture-empty, .fixture-error{
+    font-size:13.5px;color:var(--chalk-dim);
+    padding:16px;text-align:center;
+  }
+  .fixture-error{color:var(--red);}
+
+  @media (max-width:600px){
+    .atlas-modal{padding:22px 18px 24px;}
+    .fixture-teams{flex-direction:column;align-items:flex-start;gap:6px;}
+    .fixture-vs{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fx" aria-hidden="true">
+  <div class="bg-stripes"></div>
+  <div class="bg-particles" id="bgParticles"></div>
+</div>
+
+<nav class="topnav">
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span>ClubAtlas</div>
+    <ul class="navlinks" id="navLinks">
+      <li><a href="#live">Live Scores</a></li>
+      <li><a href="#leagues">Leagues</a></li>
+      <li><a href="#quiz">Quiz</a></li>
+    </ul>
+    <button class="navtoggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">☰</button>
+  </div>
+</nav>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<header class="hero">
+  <svg class="hero-ball" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="32" cy="32" r="30" fill="#F1F0EA"/>
+    <path d="M32 12 L44 20 L40 34 L24 34 L20 20 Z" fill="#05080B"/>
+    <path d="M32 12 L44 20 M44 20 L40 34 M40 34 L24 34 M24 34 L20 20 M20 20 L32 12" stroke="#05080B" stroke-width="2"/>
+    <circle cx="32" cy="32" r="30" fill="none" stroke="#05080B" stroke-width="1.5"/>
+  </svg>
+  <div class="wrap">
+    <div>
+      <p class="hero-eyebrow">SIX LEAGUES · ONE SEASON</p>
+      <h1 class="glitch-h1">Know your <span class="glow-word">leagues.</span><br>Know your <span class="glow-word">clubs.</span></h1>
+      <p>A home for the competitions that matter — who plays in them, where they're based, and how they fit together. Then test what you've picked up in the quiz.</p>
+      <div class="hero-ctas">
+        <a href="#leagues" class="btn btn-primary">Browse leagues</a>
+        <a href="#quiz" class="btn btn-ghost">Take the quiz</a>
+      </div>
+    </div>
+    <div class="scoreboard">
+      <div class="scoreboard-top">
+        <span>MATCHDAY 1</span>
+        <span>ESTADIO CENTRAL</span>
+      </div>
+      <div class="score-row">
+        <div class="team home">HOME<span class="sub">Kickoff XI</span></div>
+        <div class="score-digits"><span>0</span><span class="colon">:</span><span>0</span></div>
+        <div class="team">AWAY<span class="sub">Second Half</span></div>
+      </div>
+      <div class="clock"><span class="pulse"></span> 00:00 — LIVE</div>
+    </div>
+  </div>
+</header>
+
+<div class="hazard" aria-hidden="true"></div>
+
+<section class="live" id="live">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="sec-kicker">RIGHT NOW</p>
+      <h2>Live &amp; upcoming matches</h2>
+      <p>Pulled from football-data.org. Live matches show first; if nothing's on, you'll see today's fixtures.</p>
+    </div>
+    <div id="liveStatus" class="live-status">Loading matches…</div>
+    <div class="live-grid" id="liveGrid"></div>
+    <div class="live-updated" id="liveUpdated"></div>
+  </div>
+</section>
+
+<section class="leagues" id="leagues">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="sec-kicker">COMPETITIONS</p>
+      <h2>The leagues, and who plays in them</h2>
+      <p>Five domestic top flights and the continental competition that sits above them. Tap a competition to see its clubs.</p>
+    </div>
+
+    <div class="league-tabs" id="leagueTabs"></div>
+    <div id="leaguePanels"></div>
+  </div>
+</section>
+
+<div class="hazard" aria-hidden="true"></div>
+
+<section class="quiz" id="quiz">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="sec-kicker">TEST YOURSELF</p>
+      <h2>Football quiz</h2>
+      <p>Ten questions on leagues and clubs. See how many you get right.</p>
+    </div>
+
+    <div class="quiz-box">
+      <div id="quizActive">
+        <div class="quiz-progress">
+          <span id="quizPos">Question 1 of 10</span>
+          <span class="quiz-score" id="quizScore">SCORE 0</span>
+        </div>
+        <div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill"></div></div>
+        <div class="quiz-question" id="quizQuestion"></div>
+        <div class="quiz-options" id="quizOptions"></div>
+      </div>
+
+      <div class="quiz-result" id="quizResult">
+        <div class="big" id="quizFinalScore">0/10</div>
+        <p id="quizFinalMsg">Nice work.</p>
+        <button class="btn btn-primary" id="quizRestart">Play again</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>ClubAtlas — a football reference &amp; quiz page.</span>
+    <span>Club lists reflect a recent season and shift with promotion, relegation, and transfers.</span>
+  </div>
+</footer>
+
+<!-- ============================================================
+     CLUB PROFILE MODAL (new feature)
+     Opens when a club card is clicked. Shows the club's next 5
+     upcoming fixtures in the six tracked competitions, pulled
+     live from API-Football. Hidden by default; adds no visual
+     change to the existing page until a club is selected.
+     ============================================================ -->
+<div class="atlas-modal-overlay" id="clubModalOverlay" hidden>
+  <div class="atlas-modal" role="dialog" aria-modal="true" aria-labelledby="clubModalName">
+    <button class="atlas-modal-close" id="clubModalClose" aria-label="Close club profile">✕</button>
+    <div class="atlas-modal-header">
+      <div class="atlas-modal-crest" id="clubModalCrest"></div>
+      <div>
+        <h3 id="clubModalName"></h3>
+        <p class="atlas-modal-sub">Next 5 matches — Premier League, LaLiga, Serie A, Bundesliga, Ligue 1 &amp; UEFA Champions League</p>
+      </div>
+    </div>
+    <div class="fixture-list" id="fixtureList">
+      <!-- Fixture cards or loading/empty/error state are injected here by JS -->
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ---------------- LEAGUE DATA ---------------- */
+  const leagueAccents = {
+    laliga:"#E85D3D", epl:"#6C4FD6", ligue1:"#1E7ADB",
+    seriea:"#0D8A5F", bundesliga:"#D6203A", ucl:"#3B5BA5"
+  };
+
+  function crestInitials(name){
+    const stop = new Set(["FC","CF","AS","SC","RC","CA","RCD","SS","SSC","1.","VfB","VfL","OGC","AC"]);
+    const words = name.split(" ").filter(w => !stop.has(w));
+    const letters = (words.length >= 2 ? words[0][0]+words[1][0] : name.slice(0,2));
+    return letters.toUpperCase();
+  }
+
+  function shade(hex, amt){
+    const n = parseInt(hex.slice(1),16);
+    const r = Math.max(0, Math.min(255, (n>>16) + amt));
+    const g = Math.max(0, Math.min(255, ((n>>8)&0xff) + amt));
+    const b = Math.max(0, Math.min(255, (n&0xff) + amt));
+    return "#"+(1<<24 | r<<16 | g<<8 | b).toString(16).slice(1);
+  }
+
+  let crestUid = 0;
+  function crestSVG(name, accent){
+    const id = "cg"+(crestUid++);
+    const initials = crestInitials(name);
+    const dark = shade(accent, -40);
+    return `
+      <svg viewBox="0 0 44 50" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${accent}"/>
+            <stop offset="100%" stop-color="${dark}"/>
+          </linearGradient>
+        </defs>
+        <path d="M22 1.5 L41 7.5 L41 24 C41 36.5 33 45.5 22 48.5 C11 45.5 3 36.5 3 24 L3 7.5 Z"
+              fill="url(#${id})" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/>
+        <path d="M22 1.5 L41 7.5 L41 24 C41 36.5 33 45.5 22 48.5 C11 45.5 3 36.5 3 24 L3 7.5 Z"
+              fill="none" stroke="rgba(14,27,44,0.25)" stroke-width="0.6"/>
+        <line x1="22" y1="6" x2="22" y2="20" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+        <text x="22" y="30" text-anchor="middle" font-family="Anton, sans-serif"
+              font-size="15" fill="#fff" style="letter-spacing:0.5px">${initials}</text>
+        <circle cx="22" cy="40" r="2" fill="rgba(255,255,255,0.55)"/>
+      </svg>`;
+  }
+
+  const leagues = [
+    {
+      id:"laliga",
+      name:"LaLiga",
+      country:"Spain",
+      founded:"1929",
+      clubCount:20,
+      note:"Spain's top flight. Twenty clubs, three up and three down with the Segunda División each season.",
+      clubs:[
+        {name:"Real Madrid", city:"Madrid"},
+        {name:"FC Barcelona", city:"Barcelona"},
+        {name:"Atlético Madrid", city:"Madrid"},
+        {name:"Athletic Bilbao", city:"Bilbao"},
+        {name:"Real Sociedad", city:"San Sebastián"},
+        {name:"Real Betis", city:"Seville"},
+        {name:"Sevilla FC", city:"Seville"},
+        {name:"Villarreal CF", city:"Villarreal"},
+        {name:"Valencia CF", city:"Valencia"},
+        {name:"Girona FC", city:"Girona"},
+        {name:"Celta Vigo", city:"Vigo"},
+        {name:"RCD Mallorca", city:"Palma"},
+        {name:"CA Osasuna", city:"Pamplona"},
+        {name:"Rayo Vallecano", city:"Madrid"},
+        {name:"Deportivo Alavés", city:"Vitoria-Gasteiz"},
+        {name:"Getafe CF", city:"Getafe"},
+      ]
+    },
+    {
+      id:"epl",
+      name:"Premier League",
+      country:"England",
+      founded:"1992",
+      clubCount:20,
+      note:"England's top flight, one of the world's most watched. Twenty clubs, three relegated to the Championship each year.",
+      clubs:[
+        {name:"Manchester City", city:"Manchester"},
+        {name:"Arsenal", city:"London"},
+        {name:"Liverpool", city:"Liverpool"},
+        {name:"Manchester United", city:"Manchester"},
+        {name:"Chelsea", city:"London"},
+        {name:"Tottenham Hotspur", city:"London"},
+        {name:"Newcastle United", city:"Newcastle"},
+        {name:"Aston Villa", city:"Birmingham"},
+        {name:"Brighton & Hove Albion", city:"Brighton"},
+        {name:"West Ham United", city:"London"},
+        {name:"Everton", city:"Liverpool"},
+        {name:"Crystal Palace", city:"London"},
+        {name:"Fulham", city:"London"},
+        {name:"Brentford", city:"London"},
+        {name:"Wolverhampton Wanderers", city:"Wolverhampton"},
+        {name:"Nottingham Forest", city:"Nottingham"},
+      ]
+    },
+    {
+      id:"ligue1",
+      name:"Ligue 1",
+      country:"France",
+      founded:"1932",
+      clubCount:18,
+      note:"France's top flight, trimmed to eighteen clubs. Two automatic relegation spots plus a play-off.",
+      clubs:[
+        {name:"Paris Saint-Germain", city:"Paris"},
+        {name:"Olympique de Marseille", city:"Marseille"},
+        {name:"AS Monaco", city:"Monaco"},
+        {name:"Olympique Lyonnais", city:"Lyon"},
+        {name:"LOSC Lille", city:"Lille"},
+        {name:"OGC Nice", city:"Nice"},
+        {name:"Stade Rennais", city:"Rennes"},
+        {name:"RC Lens", city:"Lens"},
+        {name:"RC Strasbourg", city:"Strasbourg"},
+        {name:"Toulouse FC", city:"Toulouse"},
+        {name:"Stade Brestois", city:"Brest"},
+        {name:"Montpellier HSC", city:"Montpellier"},
+      ]
+    },
+    {
+      id:"seriea",
+      name:"Serie A",
+      country:"Italy",
+      founded:"1898",
+      clubCount:20,
+      note:"Italy's top flight, famed for its defensive traditions. Twenty clubs, three relegated to Serie B.",
+      clubs:[
+        {name:"Inter Milan", city:"Milan"},
+        {name:"AC Milan", city:"Milan"},
+        {name:"Juventus", city:"Turin"},
+        {name:"SSC Napoli", city:"Naples"},
+        {name:"AS Roma", city:"Rome"},
+        {name:"SS Lazio", city:"Rome"},
+        {name:"Atalanta", city:"Bergamo"},
+        {name:"Fiorentina", city:"Florence"},
+        {name:"Bologna FC", city:"Bologna"},
+        {name:"Torino FC", city:"Turin"},
+        {name:"Udinese", city:"Udine"},
+        {name:"Genoa CFC", city:"Genoa"},
+      ]
+    },
+    {
+      id:"bundesliga",
+      name:"Bundesliga",
+      country:"Germany",
+      founded:"1963",
+      clubCount:18,
+      note:"Germany's top flight, eighteen clubs, known for member-owned clubs and strong attendances.",
+      clubs:[
+        {name:"Bayern Munich", city:"Munich"},
+        {name:"Borussia Dortmund", city:"Dortmund"},
+        {name:"RB Leipzig", city:"Leipzig"},
+        {name:"Bayer Leverkusen", city:"Leverkusen"},
+        {name:"Union Berlin", city:"Berlin"},
+        {name:"Eintracht Frankfurt", city:"Frankfurt"},
+        {name:"VfB Stuttgart", city:"Stuttgart"},
+        {name:"Borussia Mönchengladbach", city:"Mönchengladbach"},
+        {name:"VfL Wolfsburg", city:"Wolfsburg"},
+        {name:"SC Freiburg", city:"Freiburg"},
+        {name:"Werder Bremen", city:"Bremen"},
+        {name:"1. FC Köln", city:"Cologne"},
+      ]
+    },
+    {
+      id:"ucl",
+      name:"UEFA Champions League",
+      country:"Europe",
+      founded:"1955",
+      clubCount:"36",
+      note:"Not a domestic league — clubs qualify each year through their national leagues or cups, so the field changes season to season. Below are clubs that have been regular qualifiers in recent years.",
+      clubs:[
+        {name:"Real Madrid", city:"Spain"},
+        {name:"Manchester City", city:"England"},
+        {name:"Bayern Munich", city:"Germany"},
+        {name:"Paris Saint-Germain", city:"France"},
+        {name:"FC Barcelona", city:"Spain"},
+        {name:"Liverpool", city:"England"},
+        {name:"Inter Milan", city:"Italy"},
+        {name:"Borussia Dortmund", city:"Germany"},
+        {name:"Arsenal", city:"England"},
+        {name:"Atlético Madrid", city:"Spain"},
+        {name:"Juventus", city:"Italy"},
+        {name:"AC Milan", city:"Italy"},
+      ]
+    },
+  ];
+
+  /* ---------------- LIVE SCORES (API-Football / api-sports.io) ---------------- */
+  const APIFOOTBALL_KEY = "75eef4bfec5de47f1502d554f68eacec";
+  const liveStatus = document.getElementById("liveStatus");
+  const liveGrid = document.getElementById("liveGrid");
+  const liveUpdated = document.getElementById("liveUpdated");
+
+  async function loadLiveScores(){
+    try{
+      let res = await fetch("https://v3.football.api-sports.io/fixtures?live=all", {
+        headers: { "x-apisports-key": APIFOOTBALL_KEY }
+      });
+      if(!res.ok) throw new Error("HTTP "+res.status);
+      let data = await res.json();
+      let fixtures = data.response || [];
+      let isLiveSet = true;
+
+      if(!fixtures.length){
+        isLiveSet = false;
+        const today = new Date().toISOString().slice(0,10);
+        res = await fetch(`https://v3.football.api-sports.io/fixtures?date=${today}`, {
+          headers: { "x-apisports-key": APIFOOTBALL_KEY }
+        });
+        if(!res.ok) throw new Error("HTTP "+res.status);
+        data = await res.json();
+        fixtures = data.response || [];
+      }
+
+      if(!fixtures.length){
+        liveStatus.textContent = "No matches found for right now.";
+        liveGrid.innerHTML = "";
+        liveUpdated.textContent = "Last updated " + new Date().toLocaleTimeString();
+        return;
+      }
+
+      liveStatus.classList.remove("error");
+      liveStatus.textContent = isLiveSet
+        ? `${fixtures.length} match${fixtures.length>1?"es":""} live right now.`
+        : `Nothing live at the moment — showing today's fixtures.`;
+      liveUpdated.textContent = "Last updated " + new Date().toLocaleTimeString();
+
+      liveGrid.innerHTML = fixtures.slice(0,12).map(f => {
+        const home = f.teams?.home?.name || "Home";
+        const away = f.teams?.away?.name || "Away";
+        const hs = f.goals?.home ?? "–";
+        const as = f.goals?.away ?? "–";
+        const statusShort = f.fixture?.status?.short || "";
+        const isLive = ["1H","2H","HT","ET","P","LIVE"].includes(statusShort);
+        const isFinished = ["FT","AET","PEN"].includes(statusShort);
+        const statusLabel = isLive
+          ? `${f.fixture?.status?.elapsed ?? ""}' — LIVE`
+          : isFinished ? "FULL TIME"
+          : new Date(f.fixture?.date).toLocaleString(undefined, {weekday:"short", hour:"2-digit", minute:"2-digit"});
+        return `
+          <div class="match-card">
+            <div class="match-comp">${f.league?.name || ""}</div>
+            <div class="match-teams">
+              <div class="match-team"><span>${home}</span><span class="n">${isLive || isFinished ? hs : ""}</span></div>
+              <div class="match-team"><span>${away}</span><span class="n">${isLive || isFinished ? as : ""}</span></div>
+            </div>
+            <div class="match-status ${isLive ? "live":""}">${statusLabel}</div>
+          </div>`;
+      }).join("");
+
+    } catch(err){
+      liveStatus.classList.add("error");
+      liveStatus.innerHTML = `Couldn't load live scores (${err.message}). Double-check the API key is valid and hasn't hit its daily request limit on the free plan.`;
+    }
+  }
+  loadLiveScores();
+  setInterval(loadLiveScores, 60000);
+
+  const tabsEl = document.getElementById("leagueTabs");
+  const panelsEl = document.getElementById("leaguePanels");
+
+  leagues.forEach((lg, i) => {
+    const accent = leagueAccents[lg.id] || "#9B9788";
+
+    const tab = document.createElement("button");
+    tab.className = "league-tab" + (i===0 ? " active":"");
+    tab.style.setProperty("--accent", accent);
+    tab.innerHTML = `<span class="swatch"></span>${lg.name}`;
+    tab.dataset.target = lg.id;
+    tab.addEventListener("click", () => selectLeague(lg.id));
+    tabsEl.appendChild(tab);
+
+    const panel = document.createElement("div");
+    panel.className = "league-panel" + (i===0 ? " active":"");
+    panel.id = "panel-"+lg.id;
+    panel.style.setProperty("--accent", accent);
+
+    const clubsHtml = lg.clubs.map((c) => `
+      <div class="club-card" data-club-name="${c.name}" data-accent="${accent}" role="button" tabindex="0" aria-label="View ${c.name} profile">
+        <div class="club-crest">${crestSVG(c.name, accent)}</div>
+        <div class="club-card-body">
+          <span class="name">${c.name}</span>
+          <span class="city">${c.city}</span>
+        </div>
+      </div>`).join("");
+
+    panel.innerHTML = `
+      <div class="league-meta" style="--accent:${accent}">
+        <div><div class="k">COUNTRY</div><div class="v">${lg.country}</div></div>
+        <div><div class="k">FOUNDED</div><div class="v">${lg.founded}</div></div>
+        <div><div class="k">CLUBS</div><div class="v">${lg.clubCount}</div></div>
+      </div>
+      <p class="league-note">${lg.note}</p>
+      <div class="club-grid" style="--accent:${accent}">${clubsHtml}</div>
+    `;
+    panelsEl.appendChild(panel);
+  });
+
+  function selectLeague(id){
+    document.querySelectorAll(".league-tab").forEach(t => t.classList.toggle("active", t.dataset.target===id));
+    document.querySelectorAll(".league-panel").forEach(p => p.classList.toggle("active", p.id === "panel-"+id));
+  }
+
+  /* ---------------- TICKER ---------------- */
+  const tickerItems = [
+    "LALIGA · 20 CLUBS FIGHTING FOR THE TITLE",
+    "PREMIER LEAGUE · THE MOST WATCHED DOMESTIC COMPETITION IN THE WORLD",
+    "LIGUE 1 · EIGHTEEN CLUBS, THREE GO DOWN",
+    "SERIE A · ITALY'S TOP FLIGHT SINCE 1898",
+    "BUNDESLIGA · GERMANY'S MEMBER-OWNED GIANTS",
+    "UEFA CHAMPIONS LEAGUE · EUROPE'S BEST QUALIFY EVERY SEASON",
+  ];
+  /* ---------------- BACKGROUND PARTICLES ---------------- */
+  /* ---------------- MOBILE NAV ---------------- */
+  const navToggle = document.getElementById("navToggle");
+  const navLinks = document.getElementById("navLinks");
+  navToggle.addEventListener("click", () => {
+    const open = navLinks.classList.toggle("open");
+    navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  navLinks.querySelectorAll("a").forEach(a => {
+    a.addEventListener("click", () => {
+      navLinks.classList.remove("open");
+      navToggle.setAttribute("aria-expanded", "false");
+    });
+  });
+
+  const particleColors = ["#C6FF3D","#FFB020","#FF3355"];
+  const particleHost = document.getElementById("bgParticles");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const particleCount = reducedMotion ? 0 : (window.innerWidth < 640 ? 8 : 16);
+  for(let i=0;i<particleCount;i++){
+    const p = document.createElement("div");
+    p.className = "bg-particle";
+    const size = 3 + Math.random()*4;
+    p.style.width = size+"px";
+    p.style.height = size+"px";
+    p.style.left = Math.random()*100 + "vw";
+    p.style.background = particleColors[i % particleColors.length];
+    p.style.boxShadow = `0 0 8px ${particleColors[i % particleColors.length]}`;
+    const duration = 10 + Math.random()*14;
+    p.style.animationDuration = duration+"s";
+    p.style.animationDelay = (Math.random()*duration)+"s";
+    particleHost.appendChild(p);
+  }
+
+  const tickerTrack = document.getElementById("tickerTrack");
+  const tickerHtml = tickerItems.map(t => `<span>${t}</span>`).join("");
+  tickerTrack.innerHTML = tickerHtml + tickerHtml; // duplicate for seamless loop
+
+  /* ---------------- QUIZ ---------------- */
+  const quizData = [
+    { q:"Which club has won the most UEFA Champions League titles?", options:["Real Madrid","AC Milan","Bayern Munich","Liverpool"], a:0 },
+    { q:"Which city is home to both Inter Milan and AC Milan?", options:["Turin","Rome","Milan","Naples"], a:2 },
+    { q:"How many clubs currently compete in the Premier League?", options:["18","20","22","24"], a:1 },
+    { q:"Which league is Paris Saint-Germain part of?", options:["Serie A","LaLiga","Ligue 1","Bundesliga"], a:2 },
+    { q:"Which German club plays its home matches at the Allianz Arena?", options:["Borussia Dortmund","Bayern Munich","RB Leipzig","Bayer Leverkusen"], a:1 },
+    { q:"Which Spanish club is nicknamed 'Los Colchoneros'?", options:["Real Betis","Atlético Madrid","Athletic Bilbao","Sevilla FC"], a:1 },
+    { q:"The UEFA Champions League is best described as:", options:["A fixed 20-club domestic league","A cup open to any amateur team","A competition clubs qualify for via their domestic league or cup","A reserve-team tournament"], a:2 },
+    { q:"Which club is based in Turin alongside Juventus?", options:["Torino FC","Udinese","Bologna FC","Genoa CFC"], a:0 },
+    { q:"Which league did Girona FC compete in during a recent LaLiga season?", options:["Ligue 1","LaLiga","Premier League","Bundesliga"], a:1 },
+    { q:"Which English club plays home matches at the Emirates Stadium?", options:["Chelsea","Tottenham Hotspur","Arsenal","West Ham United"], a:2 },
+  ];
+
+  let qIndex = 0, score = 0;
+  const quizQuestion = document.getElementById("quizQuestion");
+  const quizOptions = document.getElementById("quizOptions");
+  const quizPos = document.getElementById("quizPos");
+  const quizScore = document.getElementById("quizScore");
+  const quizBarFill = document.getElementById("quizBarFill");
+  const quizActive = document.getElementById("quizActive");
+  const quizResult = document.getElementById("quizResult");
+  const quizFinalScore = document.getElementById("quizFinalScore");
+  const quizFinalMsg = document.getElementById("quizFinalMsg");
+
+  function renderQuestion(){
+    const item = quizData[qIndex];
+    quizQuestion.textContent = item.q;
+    quizPos.textContent = `Question ${qIndex+1} of ${quizData.length}`;
+    quizScore.textContent = `SCORE ${score}`;
+    quizBarFill.style.width = (qIndex/quizData.length*100)+"%";
+    quizOptions.innerHTML = "";
+    item.options.forEach((opt,i) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-opt";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => handleAnswer(i, btn));
+      quizOptions.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(i, btn){
+    const item = quizData[qIndex];
+    const allOpts = quizOptions.querySelectorAll(".quiz-opt");
+    allOpts.forEach(o => o.disabled = true);
+    if(i === item.a){
+      btn.classList.add("correct");
+      score++;
+    } else {
+      btn.classList.add("wrong");
+      allOpts[item.a].classList.add("correct");
+    }
+    quizScore.textContent = `SCORE ${score}`;
+    setTimeout(() => {
+      qIndex++;
+      if(qIndex < quizData.length){
+        renderQuestion();
+      } else {
+        finishQuiz();
+      }
+    }, 900);
+  }
+
+  function finishQuiz(){
+    quizBarFill.style.width = "100%";
+    quizActive.style.display = "none";
+    quizResult.style.display = "block";
+    quizFinalScore.textContent = `${score}/${quizData.length}`;
+    let msg = "Solid — you know the game.";
+    if(score === quizData.length) msg = "Perfect score. You know your football.";
+    else if(score <= 3) msg = "Room to grow — have another go.";
+    quizFinalMsg.textContent = msg;
+  }
+
+  document.getElementById("quizRestart").addEventListener("click", () => {
+    qIndex = 0; score = 0;
+    quizActive.style.display = "block";
+    quizResult.style.display = "none";
+    renderQuestion();
+  });
+
+  renderQuestion();
+
+  /* ============================================================
+     CLUB PROFILE — UPCOMING MATCHES (new feature)
+     Clicking any club card opens a profile panel showing that
+     club's next 5 upcoming fixtures, live from API-Football,
+     restricted to: Premier League, LaLiga, Serie A, Bundesliga,
+     Ligue 1, and the UEFA Champions League. Nothing here modifies
+     any existing function, class, or piece of markup above —
+     it only listens for clicks and fills in the modal added
+     to the bottom of the page.
+     ============================================================ */
+  (function initClubProfileFeature(){
+
+    // API-Football league IDs for the six competitions we're allowed to show.
+    // Any fixture in a different competition (domestic cups, super cups,
+    // friendlies, etc.) is filtered out client-side before rendering.
+    const TRACKED_LEAGUE_IDS = new Set([
+      39,   // Premier League
+      140,  // LaLiga
+      135,  // Serie A
+      78,   // Bundesliga
+      61,   // Ligue 1
+      2,    // UEFA Champions League
+    ]);
+
+    const FIXTURES_TO_SHOW = 5;
+    const REFRESH_INTERVAL_MS = 60000; // same refresh cadence as the live-scores widget above
+
+    // Session-only caches so re-opening a club's profile (or the auto-refresh
+    // tick) doesn't re-spend API calls looking up the same team id.
+    const teamIdCache = new Map(); // club name -> API-Football team id
+
+    const overlay = document.getElementById("clubModalOverlay");
+    const closeBtn = document.getElementById("clubModalClose");
+    const nameEl = document.getElementById("clubModalName");
+    const crestEl = document.getElementById("clubModalCrest");
+    const listEl = document.getElementById("fixtureList");
+
+    let refreshTimer = null;
+    let activeClub = null; // guards against a slow response rendering after the user moved on
+
+    /* ---------- Data fetching ---------- */
+
+    // Resolve a club name to its API-Football team id (cached after first lookup).
+    async function resolveTeamId(clubName){
+      if(teamIdCache.has(clubName)) return teamIdCache.get(clubName);
+
+      const res = await fetch(`https://v3.football.api-sports.io/teams?search=${encodeURIComponent(clubName)}`, {
+        headers: { "x-apisports-key": APIFOOTBALL_KEY }
+      });
+      if(!res.ok) throw new Error("HTTP "+res.status);
+      const data = await res.json();
+      const match = data.response && data.response[0];
+      if(!match) throw new Error("Club not found in API-Football");
+
+      teamIdCache.set(clubName, match.team.id);
+      return match.team.id;
+    }
+
+    // Fetch the club's next fixtures and narrow them down to the tracked competitions.
+    async function fetchUpcomingFixtures(clubName){
+      const teamId = await resolveTeamId(clubName);
+
+      // Request more than we need up front — some of the next fixtures
+      // may be cup or friendly matches that get filtered out below.
+      const res = await fetch(`https://v3.football.api-sports.io/fixtures?team=${teamId}&next=30`, {
+        headers: { "x-apisports-key": APIFOOTBALL_KEY }
+      });
+      if(!res.ok) throw new Error("HTTP "+res.status);
+      const data = await res.json();
+      const fixtures = data.response || [];
+
+      return fixtures
+        .filter(f => TRACKED_LEAGUE_IDS.has(f.league?.id))
+        .sort((a,b) => new Date(a.fixture.date) - new Date(b.fixture.date))
+        .slice(0, FIXTURES_TO_SHOW);
+    }
+
+    /* ---------- Rendering ---------- */
+
+    // Status label, mirroring the wording already used for live scores elsewhere on the page.
+    function statusLabel(fixture){
+      const short = fixture.fixture?.status?.short || "";
+      if(["1H","2H","HT","ET","P","LIVE"].includes(short)){
+        return { text: `${fixture.fixture?.status?.elapsed ?? ""}' — LIVE`, cls: "live" };
+      }
+      if(["FT","AET","PEN"].includes(short)) return { text: "FULL TIME", cls: "finished" };
+      if(["PST","CANC"].includes(short)) return { text: "Postponed", cls: "finished" };
+      return { text: "Upcoming", cls: "" };
+    }
+
+    function fixtureCardHtml(fixture){
+      const home = fixture.teams?.home || {};
+      const away = fixture.teams?.away || {};
+      const league = fixture.league || {};
+      const venue = fixture.fixture?.venue?.name;
+      const kickoff = new Date(fixture.fixture?.date);
+
+      // No explicit timeZone passed to toLocaleDateString/toLocaleTimeString,
+      // so the browser renders both in the viewer's own local timezone.
+      const dateStr = kickoff.toLocaleDateString(undefined, { weekday:"short", day:"numeric", month:"short" });
+      const timeStr = kickoff.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" });
+      const status = statusLabel(fixture);
+
+      return `
+        <div class="fixture-card">
+          <div class="fixture-comp">
+            ${league.logo ? `<img src="${league.logo}" alt="" loading="lazy">` : ""}
+            <span>${league.name || "Competition"}</span>
+          </div>
+          <div class="fixture-teams">
+            <div class="fixture-team">
+              ${home.logo ? `<img src="${home.logo}" alt="" loading="lazy">` : ""}
+              <span>${home.name || "Home"}</span>
+            </div>
+            <span class="fixture-vs">vs</span>
+            <div class="fixture-team">
+              ${away.logo ? `<img src="${away.logo}" alt="" loading="lazy">` : ""}
+              <span>${away.name || "Away"}</span>
+            </div>
+          </div>
+          <div class="fixture-meta">
+            <span>${dateStr}</span>
+            <span>${timeStr} (your local time)</span>
+            <span>${venue ? venue : "Venue TBC"}</span>
+            <span class="fixture-status ${status.cls}">${status.text}</span>
+          </div>
+        </div>`;
+    }
+
+    function renderFixtures(fixtures){
+      listEl.innerHTML = fixtures.length
+        ? fixtures.map(fixtureCardHtml).join("")
+        : `<div class="fixture-empty">No upcoming matches in the tracked competitions right now.</div>`;
+    }
+
+    /* ---------- Modal lifecycle ---------- */
+
+    async function loadAndRenderFixtures(clubName){
+      listEl.innerHTML = `<div class="fixture-loading">Loading upcoming matches…</div>`;
+      try{
+        const fixtures = await fetchUpcomingFixtures(clubName);
+        // Ignore a late response if the user has since closed the modal or opened a different club.
+        if(activeClub === clubName) renderFixtures(fixtures);
+      } catch(err){
+        if(activeClub === clubName){
+          listEl.innerHTML = `<div class="fixture-error">Couldn't load fixtures (${err.message}). Double-check the API key is valid and hasn't hit its daily request limit on the free plan.</div>`;
+        }
+      }
+    }
+
+    function openClubModal(clubName, crestSvgMarkup){
+      activeClub = clubName;
+      nameEl.textContent = clubName;
+      crestEl.innerHTML = crestSvgMarkup;
+      overlay.hidden = false;
+
+      loadAndRenderFixtures(clubName);
+
+      // Keep the fixture list current while the profile stays open,
+      // matching the refresh cadence already used for live scores.
+      clearInterval(refreshTimer);
+      refreshTimer = setInterval(() => loadAndRenderFixtures(clubName), REFRESH_INTERVAL_MS);
+    }
+
+    function closeClubModal(){
+      overlay.hidden = true;
+      activeClub = null;
+      clearInterval(refreshTimer);
+      refreshTimer = null;
+    }
+
+    /* ---------- Wiring up club cards ---------- */
+
+    // Club cards are re-rendered per league tab, so listen on the shared
+    // container (event delegation) rather than binding to each card.
+    panelsEl.addEventListener("click", (e) => {
+      const card = e.target.closest(".club-card");
+      if(!card) return;
+      const crestSvgMarkup = card.querySelector(".club-crest").innerHTML;
+      openClubModal(card.dataset.clubName, crestSvgMarkup);
+    });
+
+    panelsEl.addEventListener("keydown", (e) => {
+      if(e.key !== "Enter" && e.key !== " ") return;
+      const card = e.target.closest(".club-card");
+      if(!card) return;
+      e.preventDefault();
+      card.click();
+    });
+
+    closeBtn.addEventListener("click", closeClubModal);
+    overlay.addEventListener("click", (e) => { if(e.target === overlay) closeClubModal(); });
+    document.addEventListener("keydown", (e) => { if(e.key === "Escape" && !overlay.hidden) closeClubModal(); });
+
+  })();
+</script>
+
+</body>
+</html>
